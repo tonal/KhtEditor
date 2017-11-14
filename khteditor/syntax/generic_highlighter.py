@@ -68,7 +68,7 @@ class XMLSyntaxParser(ContentHandler):
     def get_style(self,style):
         try:
             return STYLES[style]
-        except KeyError, err:
+        except KeyError as err:
             print 'Unknow style :',err
             return STYLES['default']
 

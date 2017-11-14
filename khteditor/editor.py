@@ -76,7 +76,7 @@ class KhtTextEdit(QPlainTextEdit):
         self.isMAEMO = False
         self.scroller = None
 
-        palette = self.palette();
+        palette = self.palette()
         palette.setColor(QPalette.Base, Qt.white)
         palette.setColor(QPalette.Text, Qt.black)
         self.setPalette(palette)
@@ -84,7 +84,8 @@ class KhtTextEdit(QPlainTextEdit):
         self.hl_color =  QColor('lightblue').lighter(120)
         self.qt18720 = False
 
-        if ((parent.settings.value("qt18720"))=='2'):
+        has_parent_settings = hasattr(parent, 'settings')
+        if has_parent_settings and parent.settings.value("qt18720")== '2':
             self.qt18720 = True
         else:
             self.qt18720 = False
@@ -117,10 +118,10 @@ class KhtTextEdit(QPlainTextEdit):
         parent.setWindowTitle(self.filename)
 
         #Set no wrap
-        if (bool(parent.settings.value("WrapLine"))):
-            self.setLineWrapMode( QPlainTextEdit.NoWrap)
+        if has_parent_settings and bool(parent.settings.value("WrapLine")):
+            self.setLineWrapMode(QPlainTextEdit.NoWrap)
         else:
-            self.setLineWrapMode( QPlainTextEdit.WidgetWidth)
+            self.setLineWrapMode(QPlainTextEdit.WidgetWidth)
 
         font =  QFont()
         try:
@@ -149,7 +150,7 @@ class KhtTextEdit(QPlainTextEdit):
 
         #Keep threaded plugins references to avoid them to be garbage collected
         self.threaded_plugins = []
-        self.enabled_plugins = parent.enabled_plugins
+        self.enabled_plugins = getattr(parent, 'enabled_plugins', [])
 
         #Current Line highlight and Bracket matcher
         self.cursorPositionChanged.connect(self.curPositionChanged)
@@ -163,7 +164,8 @@ class KhtTextEdit(QPlainTextEdit):
         return None
 
     def loadHighlighter(self,filename=None):
-        filename = self.filename
+        if not filename:
+            filename = self.filename
         language = self.detectLanguage(filename)
         #Return None if language not yet implemented natively in KhtEditor
         if language == 'python':
