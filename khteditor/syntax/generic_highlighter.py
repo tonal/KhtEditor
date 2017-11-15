@@ -34,6 +34,7 @@ STYLES = {
     'default': format('black'),
     'preprocessor': format('darkMagenta'),
     'keyword': format('darkOrange'),
+    'special': format('darkMagenta'),
     'datatype': format('darkMagenta'),
     'operator': format('darkMagenta'),
     'brace': format('darkGray'),
