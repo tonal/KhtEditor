@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 """KhtEditor a source code editor by Khertan : Code Editor"""
+from __future__ import print_function
 
 import re
 from PyQt4.QtCore import Qt, QEvent, \
@@ -392,7 +392,7 @@ class KhtTextEdit(QPlainTextEdit):
             try:
                 self.save()
                 event.accept()
-            except (IOError, OSError), ioError:
+            except (IOError, OSError) as ioError:
                 QMessageBox.warning(self, "Text Editor -- Save Error",
                         "Failed to save %s: %s" % (self.filename, ioError))
                 event.ignore()
@@ -418,13 +418,13 @@ class KhtTextEdit(QPlainTextEdit):
 
             filehandle =  QFile(self.filename)
             if not filehandle.open( QIODevice.WriteOnly):
-                raise IOError, unicode(filehandle.errorString())
+                raise IOError(unicode(filehandle.errorString()))
             stream =  QTextStream(filehandle)
             stream.setCodec("UTF-8")
             stream << self.toPlainText()
             self.document().setModified(False)
             RecentFiles().append(self.filename)
-        except (IOError, OSError), ioError:
+        except (IOError, OSError) as ioError:
             exception = ioError
         finally:
             if filehandle is not None:
@@ -521,7 +521,7 @@ class KhtTextEdit(QPlainTextEdit):
         try:
             filehandle =  QFile(self.filename)
             if not filehandle.open( QIODevice.ReadOnly):
-                raise IOError, unicode(filehandle.errorString())
+                raise IOError(unicode(filehandle.errorString()))
             stream =  QTextStream(filehandle)
             stream.setCodec("UTF-8")
             QApplication.processEvents()
@@ -532,7 +532,7 @@ class KhtTextEdit(QPlainTextEdit):
             for plugin in filter_plugins_by_capability('afterFileOpen',self.enabled_plugins):
                 plugin.do_afterFileOpen(self)
 
-        except (IOError, OSError), error:
+        except (IOError, OSError) as error:
             exception = error
         finally:
             if filehandle is not None:
@@ -619,7 +619,7 @@ class KhtTextEdit(QPlainTextEdit):
                 if cursor.hasSelection():
                     cursor.insertText(new)
                 else:
-                    print 'no selection'
+                    print('no selection')
             else:
                 break
 
@@ -669,20 +669,25 @@ class KhtTextEdit(QPlainTextEdit):
         arg[2] ->  QTextDocument.FindBackward
         arg[3] ->  QTextDocument.RegEx
         """
-        print 'find called'
+        print('find called: "%s" (%s)' % (what, args))
 
-        # Use flags for case match
-        flags =  QTextDocument.FindFlags()
-        if args[0]==True:
-            flags = flags |  QTextDocument.FindCaseSensitively
-        if args[1]==True:
-            flags = flags |  QTextDocument.FindWholeWords
-        if args[2]==True:
-            flags = flags |  QTextDocument.FindBackward
+        if not args:
+            flags = QTextDocument.FindFlags()
+        elif len(args) == 1 and type(args[0]) == QTextDocument.FindFlags:
+            flags = args[0]
+        else:
+            flags = QTextDocument.FindFlags()
+            # Use flags for case match
+            if args[0]==True:
+                flags = flags |  QTextDocument.FindCaseSensitively
+            if args[1]==True:
+                flags = flags |  QTextDocument.FindWholeWords
+            if args[2]==True:
+                flags = flags |  QTextDocument.FindBackward
 
         cursor = self.textCursor()
-        if args[3]==True:
-            cursor = self.document().find( QRegExp(what),
+        if len(args) >= 4 and args[3]==True:
+            cursor = self.document().find(QRegExp(what),
                                        cursor , flags)
         else:
             cursor = self.document().find(what,
@@ -690,6 +695,9 @@ class KhtTextEdit(QPlainTextEdit):
 
         if not cursor.isNull():
             self.setTextCursor(cursor)
+
+        return not cursor.isNull()
+
 
     def duplicate(self):
         """Duplicate the current line or selection"""
@@ -716,7 +724,7 @@ class KhtTextEdit(QPlainTextEdit):
             cursor.insertText(line)
 
     def gotoLine(self, line):
-        print 'goto line:'+str(line)
+        print('goto line: %s' % line)
         cursor = self.textCursor()
         block = self.document().findBlockByLineNumber(line-1)
         cursor.setPosition(block.position())
