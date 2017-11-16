@@ -1,21 +1,25 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import os
+import sys
 import xml.sax
 from xml.sax.handler import ContentHandler
 from xml.sax.saxutils import unescape
 
-from PyQt4.QtCore import QRegExp
-from PyQt4.QtGui import QSyntaxHighlighter, QColor, QTextCharFormat, \
-    QTextBlockUserData, QFont
-
-SYNTAX_PATH = [ os.path.join('.', 'syntax'),
-                os.path.abspath('.'),
-                os.path.abspath(os.path.dirname(__file__)),
-                os.path.join(os.path.expanduser('~'),'.khteditor','syntax'),
-                '/usr/lib/python2.5/site-packages/khteditor/syntax']
+from PyQt4.QtCore import QRegExp, Qt
+from PyQt4.QtGui import (
+    QSyntaxHighlighter, QColor, QTextCharFormat, QTextBlockUserData, QFont)
 
 
-def format(color, style=''):
+SYNTAX_PATH = [
+    os.path.join('.', 'syntax'),
+    os.path.abspath('.'),
+    os.path.abspath(os.path.dirname(__file__)),
+    os.path.join(os.path.expanduser('~'),'.khteditor','syntax'),
+    '/usr/lib/python%d.%d/site-packages/khteditor/syntax' % sys.version_info[:2]]
+
+
+def format(color, style=()):
     """Return a QTextCharFormat with the given attributes.
     """
     _color = QColor()
@@ -32,7 +36,7 @@ def format(color, style=''):
 
 STYLES = {
     'default': format('black'),
-    'preprocessor': format('darkMagenta'),
+    'preprocessor': format('blueviolet'),
     'keyword': format('darkOrange'),
     'special': format('darkMagenta'),
     'datatype': format('darkMagenta'),
@@ -70,7 +74,7 @@ class XMLSyntaxParser(ContentHandler):
         try:
             return STYLES[style]
         except KeyError as err:
-            print 'Unknow style :',err
+            print('Unknow style :',err)
             return STYLES['default']
 
     # Dispatch start/end - document/element and chars
@@ -135,7 +139,11 @@ class XMLSyntaxParser(ContentHandler):
 
     def end_keywordlist(self):
         rules = [(r'\b%s\b' % w, 0, self.get_style(self.__style)) for w in self.__keywords]
-        self._grammar += ([(QRegExp(pat), index, fmt) for (pat, index, fmt) in rules])
+        if 'I' in self.__flags:
+            create_regex = lambda pat: QRegExp(pat, Qt.CaseInsensitive)
+        else:
+            create_regex = QRegExp
+        self._grammar += ([(create_regex(pat), index, fmt) for (pat, index, fmt) in rules])
         del self.__keywords
         del self.__style
         del self.__flags
@@ -167,10 +175,35 @@ class XMLSyntaxParser(ContentHandler):
         #'[^'\\]*(\\.[^'\\]*)*'
         #regexp = QRegExp('%s[^%s%s]*(%s.[^%s%s]*)*%s'%(self.__start_pattern,self.__start_pattern,self.__escape,self.__escape,self.__end_pattern,self.__escape,self.__end_pattern))
         #'[^'\\]*(?:\\.[^'\\]*)*'
-        if self.__escape == '\\':
-            self.__escape = '\\\\'
-        regexp = QRegExp("%s[^%s%s]*(?:%s.[^%s%s]*)*%s"%(self.__start_pattern,self.__start_pattern,self.__escape,self.__escape,self.__end_pattern,self.__escape,self.__end_pattern))
-        print regexp
+        escape = self.__escape
+        if escape == '\\':
+            escape = '\\\\'
+        start_pat = self.__start_pattern
+        end_pat = self.__end_pattern
+        if len(end_pat) == 1:
+            if not escape:
+                regexp = QRegExp('%s[^%s]*%s' % (start_pat, end_pat, end_pat))
+            else:
+                regexp = QRegExp(
+                    '%s[^%s%s]*(?:%s.[^%s%s]*)*%s' % (
+                        start_pat, end_pat, escape, escape, end_pat, escape,
+                        end_pat))
+        elif not escape:
+            if len(end_pat) == 2 and:
+                regexp = QRegExp(
+                    '%s[^%s]*%s+(?:[^%s][^%s]*%s+)%s' % (
+                        start_pat, end_pat[0], end_pat[0], end_pat, end_pat[0],
+                        end_pat[0], end_pat))
+            else:
+                regexp = QRegExp(
+                    '%s[^%s]*(?:%s(?!%s)[^%s]*)*%s' % (
+                        start_pat, end_pat[0], end_pat[0], end_pat[1:],
+                        end_pat[0], end_pat),
+                    Qt.CaseSensitive, QRegExp.RegExp2)
+        else:
+            regexp = QRegExp("%s[^%s%s]*(?:%s.[^%s%s]*)*%s"%(
+                start_pat, end_pat, escape, escape, end_pat, escape, end_pat))
+        #print(regexp)
         # regexp = QRegExp(r'%s[^%s]*%s'%(self.__start_pattern,self.__end_pattern,
                            #self.__escape,
                            # self.__end_pattern))
@@ -346,30 +379,30 @@ class Highlighter(QSyntaxHighlighter):
         if self.previousBlockState() == in_state:
             start = 0
             add = 0
-            #print 'No multiline:',text
+            #print('No multiline:',text)
         # Otherwise, look for the delimiter on this line
         else:
             start = start_delimiter.indexIn(text)
             # Move past this match
             add = start_delimiter.matchedLength()
             add = 0
-            #print 'Multiline:',text
+            #print('Multiline:',text)
 
         # As long as there's a delimiter match on this line...
         while start >= 0:
             # Look for the ending delimiter
             end = end_delimiter.indexIn(text, start + add)
-            #print 'end : ', end
+            #print('end : ', end)
             # Ending delimiter on this line?
             if end >= add:
                 length = end - start + add + end_delimiter.matchedLength()
-                #print 'Text:',text,', Multiline start : ', start, ', add : ',add, ', end :', end, ', lenght :',length
+                #print('Text:',text,', Multiline start : ', start, ', add : ',add, ', end :', end, ', lenght :',length)
                 self.setCurrentBlockState(0)
             # No; multi-line string
             else:
                 self.setCurrentBlockState(in_state)
                 length = len(text) - start + add
-                #print 'Text: ',text,',No Multiline start : ', start, ', add : ',add, ', end :', end, ', lenght :',length
+                #print('Text: ',text,',No Multiline start : ', start, ', add : ',add, ', end :', end, ', lenght :',length)
             # Apply formatting
             self.setFormat(start, length, style)
             # Look for the next match
@@ -383,5 +416,5 @@ class Highlighter(QSyntaxHighlighter):
 
 if __name__ == '__main__':
     syntax = XMLSyntaxParser('cpp')
-    print syntax._grammar
-    print syntax._comments
+    print(syntax._grammar)
+    print(syntax._comments)
