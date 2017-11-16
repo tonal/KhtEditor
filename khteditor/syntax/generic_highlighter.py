@@ -189,7 +189,7 @@ class XMLSyntaxParser(ContentHandler):
                         start_pat, end_pat, escape, escape, end_pat, escape,
                         end_pat))
         elif not escape:
-            if len(end_pat) == 2 and:
+            if len(end_pat) == 2:
                 regexp = QRegExp(
                     '%s[^%s]*%s+(?:[^%s][^%s]*%s+)%s' % (
                         start_pat, end_pat[0], end_pat[0], end_pat, end_pat[0],
