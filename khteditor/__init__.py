@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
 """KhtEditor a source code editor by Khertan : Init"""
 
 import sip
@@ -11,20 +11,20 @@ __version__ = '1.0.7'
 
 import os
 import sys
-import welcome_window
-from PyQt4.QtCore import Qt , QSettings, QUrl
-from PyQt4.QtGui import QMainWindow, QScrollArea, \
+from .welcome_window import WelcomeWindow
+from PyQt5.QtCore import Qt , QSettings, QUrl
+from PyQt5.QtGui import QIcon, QDesktopServices
+from PyQt5.QtWidgets import QMainWindow, QScrollArea, \
                         QWidget, QSizePolicy, \
                         QVBoxLayout, QLabel, \
-                        QIcon, QPushButton, \
+                        QPushButton, \
                         QHBoxLayout, \
-                        QDesktopServices, \
                         QApplication, QMessageBox
 
-import editor_window
-from recent_files import RecentFiles
+from .editor_window import Window as EditorWindow
+from .recent_files import RecentFiles
 
-import settings
+# import settings
 
 #Here is the installation of the hook. Each time a untrapped/unmanaged exception will
 #happen my_excepthook will be called.
@@ -45,7 +45,7 @@ def install_excepthook(app_name,app_version):
         #we have in the python interpreter
         import traceback
         s = ''.join(traceback.format_exception(exctype, value, tb))
-        print 'Except hook called : %s' % (s)
+        print('Except hook called : %s' % (s))
         formatted_text = "%s Version %s\nTrace : %s\nComments : " % (APP_NAME, APP_VERSION, s)
         write_report(formatted_text)
 
@@ -170,8 +170,8 @@ class KhtEditor:
                     req = urllib2.Request(url, data)
                     response = urllib2.urlopen(req)
                     the_page = response.read()
-                except Exception, detail:
-                    print detail
+                except Exception as detail:
+                    print(detail)
                     QMessageBox.question(None,
                     "KhtEditor Crash Report",
                     "An error occur during the report : %s" % detail,
@@ -185,7 +185,7 @@ class KhtEditor:
                     QMessageBox.Close)
                     return True
                 else:
-                    print 'page:',the_page
+                    print('page:',the_page)
                     QMessageBox.question(None,
                     "KhtEditor Crash Report",
                     "%s" % the_page,
@@ -201,14 +201,14 @@ class KhtEditor:
             Run method
         """
 
-        window = welcome_window.WelcomeWindow(self)
+        window = WelcomeWindow(self)
         window.show()
         self.crash_report()
 
         for arg in self.app.argv()[1:]:
             path = os.path.abspath(arg)
             if os.path.isfile(unicode(path)):
-                editor_win=editor_window.Window(self)
+                editor_win=EditorWindow(self)
                 self.window_list.append(editor_win)
                 editor_win.loadFile(unicode(path))
                 editor_win.show()
@@ -225,7 +225,7 @@ class KhtEditor:
             Create a new editor window
         """
 
-        editor_win = editor_window.Window(self)
+        editor_win = EditorWindow(self)
         editor_win.show()
         self.window_list.append(editor_win)
 
@@ -233,7 +233,7 @@ class KhtEditor:
         """
             Create a new editor window and open selected file
         """
-        editor_win=editor_window.Window(self)
+        editor_win=EditorWindow(self)
         editor_win.show()
         filename = editor_win.openFile(self.last_know_path)
         if not (filename == ''):
@@ -247,7 +247,7 @@ class KhtEditor:
         """
             Create a new editor window and open a recent file
         """
-        editor_win=editor_window.Window(self)
+        editor_win=EditorWindow(self)
         self.window_list.append(editor_win)
         editor_win.show()
         try:

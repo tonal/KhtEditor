@@ -3,21 +3,20 @@
 from __future__ import print_function
 
 import re
-from PyQt4.QtCore import Qt, QEvent, \
+from PyQt5.QtCore import Qt, QEvent, \
                         QFileInfo, \
                         QFile, QIODevice, \
                         QTextStream, QRegExp, pyqtSignal
-from PyQt4.QtGui import QPlainTextEdit, QColor, \
-                        QFont,  QFontMetrics, \
-                        QTextCursor, QPen, \
-                        QTextCharFormat, QTextEdit, \
-                        QTextFormat, QApplication, \
-                        QTextDocument, \
-                        QMessageBox, \
-                        QPalette
+from PyQt5.QtGui import (
+    QColor, QFont, QFontMetrics, QTextCursor, QPen, QTextCharFormat,
+    QTextFormat, QTextDocument, QPalette)
+from PyQt5.QtWidgets import QPlainTextEdit, \
+                        QTextEdit, \
+                        QApplication, \
+                        QMessageBox
 
-from plugins.plugins_api import filter_plugins_by_capability
-from recent_files import RecentFiles
+from .plugins.plugins_api import filter_plugins_by_capability
+from .recent_files import RecentFiles
 
 LANGUAGES = (('.R','R'),
             ('.ada','ada'),
@@ -171,21 +170,21 @@ class KhtTextEdit(QPlainTextEdit):
         if language == 'python':
             self.show_progress.emit(True)
             QApplication.processEvents()
-            from syntax.python_highlighter import Highlighter
+            from .syntax.python_highlighter import Highlighter
             self.highlighter = Highlighter(self.document())
             QApplication.processEvents()
             self.show_progress.emit(False)
         elif (language != None) and (language != 'None'):
             self.show_progress.emit(True)
             QApplication.processEvents()
-            from syntax.generic_highlighter import Highlighter
+            from .syntax.generic_highlighter import Highlighter
             self.highlighter = Highlighter(self.document(),language)
             QApplication.processEvents()
             self.show_progress.emit(False)
         else:
             self.show_progress.emit(True)
             QApplication.processEvents()
-            from syntax import pygments_highlighter
+            from .syntax import pygments_highlighter
             self.highlighter = \
                 pygments_highlighter.Highlighter(self.document(),
                                                  unicode(filename))

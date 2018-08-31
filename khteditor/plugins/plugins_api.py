@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 import os
 import glob
@@ -74,9 +76,9 @@ def load_plugins(plugins):
         try:
             #Get the module path for loading plugin path
             md_path = __name__.split('.')[:-1]
-            print __import__('%s.%s' % ('.'.join(md_path),plugin), None, None, [''])
-        except Exception, err:
-            print 'Failed to load : %s : %s' % (str(plugin), str(err)) #Probably defect plugin
+            print(__import__('%s.%s' % ('.'.join(md_path),plugin), None, None, ['']))
+        except Exception as err:
+            print('Failed to load : %s : %s' % (str(plugin), str(err)))  #Probably defect plugin
 
 def discover_plugin_in_paths():
     plugins = []
@@ -84,18 +86,18 @@ def discover_plugin_in_paths():
         for plug_path in glob.glob(os.path.join(path,'*.py')):
             plugin_name = os.path.splitext(os.path.basename(plug_path))[0]
             if not (plugin_name in plugins):
-                print 'Discover plugin : ' + plugin_name
+                print('Discover plugin : ' + plugin_name)
                 plugins.append(plugin_name)
     return plugins
 
 def init_plugin_system():
-    print 'Init plugin system --'
+    print('Init plugin system --')
 
     #Add path to sys.path
     for path in PATHS:
         if not path in sys.path:
             sys.path.insert(1, path)
-            print 'added to sys path',path
+            print('added to sys path',path)
 
     #Discover plugins in path
     plugins = discover_plugin_in_paths()

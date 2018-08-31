@@ -6,8 +6,8 @@ import xml.sax
 from xml.sax.handler import ContentHandler
 from xml.sax.saxutils import unescape
 
-from PyQt4.QtCore import QRegExp, Qt
-from PyQt4.QtGui import (
+from PyQt5.QtCore import QRegExp, Qt
+from PyQt5.QtGui import (
     QSyntaxHighlighter, QColor, QTextCharFormat, QTextBlockUserData, QFont)
 
 

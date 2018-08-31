@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """KhtEditor a source code editor by Benoît HERVIER (Khertan) : Editor Window"""
+from __future__ import print_function
 
-from PyQt4.QtGui import QMainWindow, \
+from PyQt5.QtGui import QKeySequence, QIcon
+from PyQt5.QtWidgets import QMainWindow, \
     QHBoxLayout, \
     QVBoxLayout, \
     QFileDialog, \
@@ -15,32 +17,32 @@ from PyQt4.QtGui import QMainWindow, \
     QFrame, \
     QLabel, \
     QPushButton, \
-    QKeySequence, \
     QLayout, \
     QMenu, \
     QAction, \
     QApplication, \
-    QIcon, \
     QMessageBox, \
     QToolButton
 
-from PyQt4.QtCore import QFileInfo, \
+from PyQt5.QtCore import QFileInfo, \
     Qt, \
     QSettings, \
     pyqtSlot,pyqtSignal
 
-from plugins.plugins_api import init_plugin_system, filter_plugins_by_capability, find_plugins
-import editor
+from .plugins.plugins_api import (
+    init_plugin_system, filter_plugins_by_capability, find_plugins)
+# import editor
 #import editor_frame
-from subprocess import Popen
-import commands
+from subprocess import Popen, check_call
+#import commands
 import os
 
+import six
 class FindAndReplaceDlg( QDialog):
     """ Find and replace dialog """
-    find = pyqtSignal(unicode,bool,bool,bool,bool)
-    replace = pyqtSignal(unicode,bool,bool,bool,bool)
-    replaceAll = pyqtSignal(unicode,bool,bool,bool,bool)
+    find = pyqtSignal(six.text_type,bool,bool,bool,bool)
+    replace = pyqtSignal(six.text_type,bool,bool,bool,bool)
+    replaceAll = pyqtSignal(six.text_type,bool,bool,bool,bool)
 
     def __init__(self, parent=None):
         super(FindAndReplaceDlg, self).__init__(parent)
@@ -150,7 +152,7 @@ class Window( QMainWindow):
         for plugin in find_plugins():
             if self.settings.contains(plugin.__name__):
                 if self.settings.value(plugin.__name__) == '2':
-                    print 'Enable plugin ', plugin
+                    print('Enable plugin ', plugin)
                     self.enabled_plugins.append(plugin()) #FIXME
 
         self.findAndReplace = FindAndReplaceDlg()
@@ -174,8 +176,8 @@ class Window( QMainWindow):
             self.area.setWidgetResizable(True)
             self.setCentralWidget(self.area)
 
-        except AttributeError, err:
-            print 'Not on maemo', err
+        except AttributeError as err:
+            print('Not on maemo', err)
             #Resize window if not maemo
             self.resize(800, 600)
             self.setupEditor()
@@ -184,7 +186,7 @@ class Window( QMainWindow):
     def fileSave(self):
         try:
             self.editor.save()
-        except (IOError, OSError), e:
+        except (IOError, OSError) as e:
              QMessageBox.warning(self, "KhtEditor -- Save Error",
                     "Failed to save %s: %s" % (self.editor.filename, e))
 
@@ -220,7 +222,7 @@ class Window( QMainWindow):
 #             QTimer.singleShot(100, self.loadHighlighter)
 #            self.loadHighlighter(filename)
 
-        except (IOError, OSError), e:
+        except (IOError, OSError) as e:
              QMessageBox.warning(self, "KhtEditor -- Load Error",
                     "Failed to load %s: %s" % (filename, e))
 
@@ -237,7 +239,7 @@ class Window( QMainWindow):
         try:
             self.setAttribute(Qt.WA_Maemo5ShowProgressIndicator, show)
         except AttributeError:
-            print 'Not on maemo'
+            print('Not on maemo')
 
 
 
@@ -305,7 +307,7 @@ class Window( QMainWindow):
 
         #Hook for plugins to add buttons in combo box:
         for plugin in filter_plugins_by_capability('toolbarHook',self.enabled_plugins):
-            print 'Found 1 Plugin for toolbarHook'
+            print('Found 1 Plugin for toolbarHook')
             plugin.do_toolbarHook(self.tb_plugin_menu)
 
     def setupFileMenu(self):
@@ -329,9 +331,9 @@ class Window( QMainWindow):
     def do_about(self):
         self.parent.about(self)
 
-    @pyqtSlot(long)
+    @pyqtSlot(six.integer_types[0])
     def do_gotoLine(self, line):
-        print 'goto line:'+str(line)
+        print('goto line:'+str(line))
         self.editor.gotoLine(line)
 
     @pyqtSlot()
@@ -343,7 +345,7 @@ class Window( QMainWindow):
 
     @pyqtSlot()
     def do_execute(self):
-        print "execute"
+        print("execute")
         #ask for save if unsaved
         self.fileSave()
 
@@ -369,10 +371,11 @@ class Window( QMainWindow):
               fileHandle.write('read -p "Press ENTER to continue ..." foo')
               fileHandle.write('\nexit')
               fileHandle.close()
-          except (IOError, OSError), e:
+          except (IOError, OSError) as e:
              QMessageBox.warning(self, "KhtEditor -- Execute Error",
                     "Failed to write launch script %s: %s" % (self.editor.filename, e))
-          commands.getoutput("chmod 777 /tmp/khteditor.tmp")
+          #commands.getoutput("chmod 777 /tmp/khteditor.tmp")
+          check_call("chmod 777 /tmp/khteditor.tmp")
           Popen('/usr/bin/osso-xterm /tmp/khteditor.tmp',shell=True,stdout=None)
 
     @pyqtSlot()

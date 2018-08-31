@@ -1,28 +1,29 @@
 #!/usr/bin/env python
 
 """KhtEditor a source code editor by Khertan : Welcome Window"""
+from __future__ import print_function
 
 import os
-from PyQt4.QtGui import QMainWindow, \
+from PyQt5.QtWidgets import QMainWindow, \
     QSizePolicy, \
     QVBoxLayout, \
-    QKeySequence, \
     QPushButton, \
     QHBoxLayout, \
     QWidget, \
     QMenu, \
     QLabel, \
-    QPixmap, \
     QScrollArea
 
-from PyQt4.QtCore import Qt
+from PyQt5.QtGui import QKeySequence, QPixmap
+
+from PyQt5.QtCore import Qt
 try:
-    from PyQt4 import QtMaemo5
+    from PyQt5 import QtMaemo5
     isMAEMO = True
 except:
     isMAEMO = False
 
-from recent_files import RecentFiles
+from .recent_files import RecentFiles
 
 
 class Curry:
@@ -33,12 +34,12 @@ class Curry:
         self.pending = args[:]
         self.kwargs = kwargs.copy()
         self.instances.append(self)
- 
+
     def __call__(self, *args, **kwargs):
         """
             Call the right methods with right parameters
         """
-        
+
         kwtmp = self.kwargs
         kwtmp.update(kwargs)
         funcArgs = self.pending + args
@@ -49,19 +50,19 @@ class Curry:
         if maxArgs != -1:
             funcArgs = funcArgs[:maxArgs]
             del kwtmp["__max_args__"]
-        print funcArgs
-        
+        print(funcArgs)
+
         return self.func(*funcArgs, **kwtmp)
 
 class WelcomeWindow( QMainWindow):
     """
         The welcome window
     """
-    
+
     def __init__(self, parent=None):
         QMainWindow.__init__(self,None)
         self.parent = parent
-                 
+
         #This is for the case we aren't on Maemo
         try:
             self.setAttribute( Qt.WA_Maemo5AutoOrientation, True)
@@ -71,7 +72,7 @@ class WelcomeWindow( QMainWindow):
             self.isMaemo = False
             self.resize(800,600)
         self.setupMain(self.isMaemo)
-        self.setupMenu()        
+        self.setupMenu()
 
         self.setCentralWidget(self.scrollArea)
 
@@ -81,39 +82,39 @@ class WelcomeWindow( QMainWindow):
         """
             Display about dialog from parent
         """
-        
+
         self.parent.about(self)
 
     def enterEvent(self,event):
         """
             Redefine the enter event to refresh recent file list
-        """        
+        """
         self.refreshMain()
-        
+
     def refreshMain(self):
         """
             Refresh the recent files list
-        """        
+        """
         recentfiles = RecentFiles().get()
-        print self._layout.count()
+        print(self._layout.count())
         for index in range(0,self._layout.count()-4):
             recentFileButton = self._layout.itemAt(index+4).widget()
-            try:                
+            try:
                 if self.isMaemo:
                     recentFileButton.setText(os.path.basename(unicode(recentfiles[index]).encode('utf-8')).decode('utf-8'))
-                    recentFileButton.setValueText(os.path.abspath(unicode(recentfiles[index]).encode('utf-8')).decode('utf-8'))         
+                    recentFileButton.setValueText(os.path.abspath(unicode(recentfiles[index]).encode('utf-8')).decode('utf-8'))
                 else:
                     recentFileButton.setText(os.path.abspath(unicode(recentfiles[index]).encode('utf-8')).decode('utf-8'))
 
             except StandardError:
                 recentFileButton.setDisabled(True)
-        
+
 
     def setupMain(self, isMaemo=False):
         """
             GUI Initialization
         """
-        
+
         self.scrollArea =  QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
         awidget =  QWidget(self.scrollArea)
@@ -121,28 +122,28 @@ class WelcomeWindow( QMainWindow):
             awidget.setMinimumSize(480,1000)
         awidget.setSizePolicy(  QSizePolicy.Expanding,  QSizePolicy.Expanding)
         self.scrollArea.setSizePolicy(  QSizePolicy.Expanding,  QSizePolicy.Expanding)
-   
+
         #Kinetic scroller is available on Maemo and should be on meego
         try:
             scroller = self.scrollArea.property("kineticScroller") #.toPyObject()
             scroller.setEnabled(True)
         except:
             pass
-            
+
         self._layout =  QVBoxLayout(awidget)
-        
+
         self.icon =  QLabel()
         self.icon.setPixmap( QPixmap(os.path.join(os.path.dirname(__file__) ,'icons','khteditor.png')).scaledToHeight(64))
         self.icon.setAlignment( Qt.AlignCenter or Qt.AlignHCenter )
         self.icon.resize(70,70)
-        
+
         self.label =  QLabel("KhtEditor Version "+self.parent.version)
         self.label.setAlignment( Qt.AlignCenter or Qt.AlignHCenter )
 
         self._layout.addWidget(self.icon)
         self._layout.addWidget(self.label)
 
-        self._layout_button =  QHBoxLayout()        
+        self._layout_button =  QHBoxLayout()
         self.new_button =  QPushButton("New")
         self.new_button.clicked.connect(self.parent.newFile)
         self.open_button =  QPushButton("Open")
@@ -170,7 +171,7 @@ class WelcomeWindow( QMainWindow):
         """
             Call back which open a recent file
         """
-        
+
         if self.isMaemo:
             self.setAttribute( Qt.WA_Maemo5ShowProgressIndicator,True)
         self.parent.openRecentFile(button)
@@ -181,7 +182,7 @@ class WelcomeWindow( QMainWindow):
         """
             Initialization of the maemo menu
         """
-        
+
         fileMenu =  QMenu(self.tr("&Menu"), self)
         self.menuBar().addMenu(fileMenu)
 
@@ -191,7 +192,7 @@ class WelcomeWindow( QMainWindow):
                  QKeySequence(self.tr("Ctrl+O", "Open")))
         fileMenu.addAction(self.tr("&Preferences..."), self.showPrefs)
         fileMenu.addAction(self.tr("&About"), self.do_about)
-        
+
     def showPrefs(self):
         """
             Call the parent class to show window
